@@ -1,0 +1,35 @@
+version: '2.1'
+#https://confluence.jetbrains.com/display/TCD10/Setting+up+TeamCity+with+MS+SQL+Server#SettingupTeamCitywithMSSQLServer-AdditionalsettingsforWindowsauthentication(MSSQLintegratedsecurity)
+# todo ADD  https://github.com/Microsoft/mssql-jdbc/releases/download/v6.4.0/mssql-jdbc-6.4.0.jre8.jar  C:/ProgramData/jetbrains/teamcity/lib/jdbc/mssql-jdbc-6.4.0.jre8.jar
+volumes:
+  db_data: {}
+  teamcity_server_data: {}
+  teamcity_server_logs: {}
+
+services:
+
+  mssql-express:
+    build: ./mssql
+    volumes:
+      - db_data:C:/mssql/
+    ports:
+      - 1433:1433
+    env_file: variables.env
+    restart: always
+
+  teamcity-server:
+    build: ./server
+    volumes:
+      - teamcity_server_data:C:/ProgramData/JetBrains/TeamCity
+      - teamcity_server_logs:C:/TeamCity/logs
+    ports:
+      - 8111:8111
+    depends_on:
+      - mssql-express
+    env_file: variables.env
+    restart: always
+
+  teamcity-agent:
+    build: ./agents/msbuild
+    env_file: variables.env
+    restart: always
